@@ -14,7 +14,7 @@ type MultiCloser struct {
 
 // New creates a MultiCloser which closes given io.Closers in reverse
 // order.
-func New(c ...io.Closer) io.Closer {
+func New(c ...io.Closer) MultiCloser {
 	return MultiCloser{
 		Closers: c,
 	}
@@ -31,4 +31,34 @@ func (mc MultiCloser) Close() error {
 	}
 
 	return multierr
+}
+
+// ReadMultiCloser implements a ReadCloser ontop of multiple closers.
+type ReadMultiCloser struct {
+	io.Reader
+	MultiCloser
+}
+
+// NewReadMultiCloser returns a ReadCloser over multiple closers, following
+// the same behavior as the MultiCloser.
+func NewReadMultiCloser(r io.Reader, c ...io.Closer) ReadMultiCloser {
+	return ReadMultiCloser{
+		Reader:      r,
+		MultiCloser: New(c...),
+	}
+}
+
+// WriteMultiCloser implements a WriteCloser ontop of multiple closers.
+type WriteMultiCloser struct {
+	io.Writer
+	MultiCloser
+}
+
+// NewWriteMultiCloser returns a WriteCloser over multiple closers, following
+// the same behavior as the MultiCloser.
+func NewWriteMultiCloser(r io.Writer, c ...io.Closer) WriteMultiCloser {
+	return WriteMultiCloser{
+		Writer:      r,
+		MultiCloser: New(c...),
+	}
 }
